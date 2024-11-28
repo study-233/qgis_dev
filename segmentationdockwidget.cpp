@@ -4,10 +4,7 @@
 
 #include "mainwindows.h"
 #include "QMessageBox"
-
-#undef slots
-#include "Python.h"
-#define slots Q_SLOTS
+#include "pythonworker.h"
 
 SegmentationDockWidget::SegmentationDockWidget(MainWindow* mainWindow,QWidget *parent)
     : QDockWidget(parent),
@@ -17,8 +14,12 @@ SegmentationDockWidget::SegmentationDockWidget(MainWindow* mainWindow,QWidget *p
     ui->setupUi(this);
     setWindowTitle("Segmentation");
 
-    QString path = QCoreApplication::applicationDirPath() + "/aerialformer/";
-    Py_SetPythonHome((wchar_t *)(reinterpret_cast<const wchar_t *>(path.utf16())));
+    ui->comboBox->addItem("aerialformer_5");
+    ui->comboBox->setCurrentIndex(0);
+
+    // 设置进度条初始值和最大值
+    ui->progressBar->setValue(0);
+    ui->progressBar->setMaximum(100);
 
 }
 
@@ -77,72 +78,60 @@ void SegmentationDockWidget::on_pushButton_selectSvg_clicked()
 
 void SegmentationDockWidget::on_pushButton_start_clicked()
 {
+    ui->progressBar->setValue(0);
 
-    //初始化python模块
-    Py_Initialize();
-    if(!Py_IsInitialized())
-    {
-        qDebug() <<"Initialize fail";
-    }
-    // 导入sys模块设置模块地址，以及python脚本路径
-    PyRun_SimpleString("import sys");
-    PyRun_SimpleString("sys.path.append('./release/py_scripts/AerialFormer')");
-
-    // 加载 python 脚本
-    PyObject *pModule = PyImport_ImportModule("sem_seg");  // 脚本名称，不带.py
-
-    if (!pModule)
-    {
-        qDebug() << "Failed to load Python module 'sem_seg'";
-        Py_Finalize();
+    if (ui->lineEdit_img1->text().isEmpty() || ui->lineEdit_svgPath->text().isEmpty() || ui->lineEdit_svgName->text().isEmpty()) {
+        QMessageBox::critical(this, "Error", QString(u8"请确保所有输入框均已填写"));
         return;
     }
 
-    // 获取 sem_seg 函数
-    PyObject *pFunc = PyObject_GetAttrString(pModule, "sem_seg");
-    if (!pFunc || !PyCallable_Check(pFunc))
-    {
-        qDebug() << "Failed to get Python function 'sem_seg'";
-        Py_DECREF(pModule);  // 释放模块
-        Py_Finalize();
-        return;
-    }
-    // 设置传入的参数（设备）
-    const char *img_path = "C:\\Users\\Administrator\\Desktop\\qgis_testimg\\Potsdam_sample\\images\\7_13_5488_0_6000_512.png";  // 传递图片路径
-    const char *out_path = "C:\\Users\\Administrator\\Desktop";
-    const char *device = "cpu";               // 可选的设备参数
+    // 创建定时器
+    QTimer *timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, [this, timer]() {
+        int currentValue = ui->progressBar->value();
+        if (currentValue < 99) {
+            ui->progressBar->setValue(currentValue + 1); // 每次增加10
+        } else {
+            timer->stop(); // 达到99后停止定时器
+            delete timer; // 删除定时器
+        }
+    });
 
-    // 构建参数对象
-    PyObject *pArgs = PyTuple_New(3);  // 2 个参数
-    PyTuple_SetItem(pArgs, 0, PyUnicode_FromString(img_path));  // 设置图片路径参数
-    PyTuple_SetItem(pArgs, 1, PyUnicode_FromString(out_path));  // 设置存储路径参数
-    PyTuple_SetItem(pArgs, 2, PyUnicode_FromString(device));    // 设置设备参数
+    // 启动定时器，每100毫秒更新一次
+    timer->start(70);
 
-    // 调用 Python 函数
-    PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
+    std::string imgPathStr = ui->lineEdit_img1->text().toStdString();
+    std::string modelStr = ui->comboBox->currentText().toStdString();
+    std::string savePathStr = ui->lineEdit_svgPath->text().toStdString();
+    std::string svgNameStr = ui->lineEdit_svgName->text().toStdString()+".png";
 
-    // 检查调用是否成功
-    if (pResult)
-    {
-        qDebug() << "Python function 'sem_seg' executed successfully.";
+    // 调试输出
+    qDebug() << QString::fromStdString(imgPathStr) << "cpu" << QString::fromStdString(modelStr)
+             << QString::fromStdString(savePathStr) << QString::fromStdString(svgNameStr);
 
-        // 处理返回值（假设返回的是二维数组）
-        // 此处可以根据返回结果的类型做进一步处理
-    }
-    else
-    {
-        qDebug() << "Python function 'sem_seg' execution failed.";
-        PyErr_Print();  // 打印 Python 错误信息
-    }
+    // 创建 PythonWorker 实例，直接传递 std::string 对象
+    PythonWorker *worker = new PythonWorker(imgPathStr, "cpu", modelStr, savePathStr, svgNameStr, this);
 
-    // 释放对象
-    Py_XDECREF(pResult);
-    Py_DECREF(pArgs);
-    Py_DECREF(pFunc);
-    Py_DECREF(pModule);
+    // // 连接进度更新信号
+    // connect(worker, &PythonWorker::progressUpdated, ui->progressBar, &QProgressBar::setValue);
 
-    // 关闭 Python 环境
-    Py_Finalize();
+    // 连接处理完成信号
+    connect(worker, &PythonWorker::processingFinished, this, [this, worker](bool success) {
+        worker->deleteLater();
+        ui->progressBar->setValue(100);
+        if (success) {
+            QMessageBox::information(this, "Success", u8"生成成功");
+        } else {
+            QMessageBox::critical(this, "Error", u8"生成失败");
+        }
+
+    });
+
+    // 启动后台线程
+    worker->start();
 
 }
+
+
+
 

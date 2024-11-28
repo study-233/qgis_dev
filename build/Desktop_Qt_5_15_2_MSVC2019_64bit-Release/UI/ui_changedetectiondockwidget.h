@@ -40,7 +40,7 @@ public:
     QLineEdit *lineEdit_img2;
     QPushButton *pushButton_select2;
     QLabel *label;
-    QComboBox *comboBox_2;
+    QComboBox *comboBox;
     QLabel *label_10;
     QHBoxLayout *horizontalLayout_3;
     QLineEdit *lineEdit_svgPath;
@@ -138,10 +138,10 @@ public:
 
         verticalLayout->addWidget(label);
 
-        comboBox_2 = new QComboBox(frame);
-        comboBox_2->setObjectName(QString::fromUtf8("comboBox_2"));
+        comboBox = new QComboBox(frame);
+        comboBox->setObjectName(QString::fromUtf8("comboBox"));
 
-        verticalLayout->addWidget(comboBox_2);
+        verticalLayout->addWidget(comboBox);
 
         label_10 = new QLabel(frame);
         label_10->setObjectName(QString::fromUtf8("label_10"));

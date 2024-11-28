@@ -62,14 +62,13 @@ private slots:
 
     void hideSelectedLayers();
 
-    void on_actiontest_triggered();
-
     void removeLayer();
 
     void slot_save_layout();
 
-    void slot_restart_layout();
+    void on_actionImport_mask_triggered();
 
+    void slot_restart_layout();
 
     void on_action3dtest_triggered();
 
@@ -106,6 +105,7 @@ private:
     QgsLayerTreeMapCanvasBridge* layerTreeCanvasBridge;
 
 public:
+    void PythonInit();          //初始化python
     void initLayerTreeView();               //初始化图层管理器函数
     void addDockWidget(Qt::DockWidgetArea area, QDockWidget* dockwidget); //添加可悬浮窗口初始位置
     void legendLayerZoomNative();

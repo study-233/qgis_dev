@@ -43,11 +43,11 @@ public:
     QLineEdit *lineEdit_svgPath;
     QPushButton *pushButton_selectSvg;
     QLabel *label_18;
-    QLineEdit *lineEdit_svgName_2;
+    QLineEdit *lineEdit_svgName;
     QLabel *label_19;
     QLineEdit *lineEdit_svgInf_2;
     QHBoxLayout *horizontalLayout_2;
-    QProgressBar *progressBar_2;
+    QProgressBar *progressBar;
     QPushButton *pushButton_start;
     QPushButton *pushButton_cancel;
 
@@ -155,14 +155,14 @@ public:
 
         verticalLayout->addWidget(label_18);
 
-        lineEdit_svgName_2 = new QLineEdit(frame);
-        lineEdit_svgName_2->setObjectName(QString::fromUtf8("lineEdit_svgName_2"));
-        sizePolicy1.setHeightForWidth(lineEdit_svgName_2->sizePolicy().hasHeightForWidth());
-        lineEdit_svgName_2->setSizePolicy(sizePolicy1);
-        lineEdit_svgName_2->setMinimumSize(QSize(160, 20));
-        lineEdit_svgName_2->setMaximumSize(QSize(150, 16777215));
+        lineEdit_svgName = new QLineEdit(frame);
+        lineEdit_svgName->setObjectName(QString::fromUtf8("lineEdit_svgName"));
+        sizePolicy1.setHeightForWidth(lineEdit_svgName->sizePolicy().hasHeightForWidth());
+        lineEdit_svgName->setSizePolicy(sizePolicy1);
+        lineEdit_svgName->setMinimumSize(QSize(160, 20));
+        lineEdit_svgName->setMaximumSize(QSize(150, 16777215));
 
-        verticalLayout->addWidget(lineEdit_svgName_2);
+        verticalLayout->addWidget(lineEdit_svgName);
 
         label_19 = new QLabel(frame);
         label_19->setObjectName(QString::fromUtf8("label_19"));
@@ -186,14 +186,14 @@ public:
 
         horizontalLayout_2 = new QHBoxLayout();
         horizontalLayout_2->setObjectName(QString::fromUtf8("horizontalLayout_2"));
-        progressBar_2 = new QProgressBar(frame);
-        progressBar_2->setObjectName(QString::fromUtf8("progressBar_2"));
-        sizePolicy1.setHeightForWidth(progressBar_2->sizePolicy().hasHeightForWidth());
-        progressBar_2->setSizePolicy(sizePolicy1);
-        progressBar_2->setMinimumSize(QSize(0, 0));
-        progressBar_2->setValue(24);
+        progressBar = new QProgressBar(frame);
+        progressBar->setObjectName(QString::fromUtf8("progressBar"));
+        sizePolicy1.setHeightForWidth(progressBar->sizePolicy().hasHeightForWidth());
+        progressBar->setSizePolicy(sizePolicy1);
+        progressBar->setMinimumSize(QSize(0, 0));
+        progressBar->setValue(24);
 
-        horizontalLayout_2->addWidget(progressBar_2);
+        horizontalLayout_2->addWidget(progressBar);
 
         pushButton_start = new QPushButton(frame);
         pushButton_start->setObjectName(QString::fromUtf8("pushButton_start"));
@@ -232,7 +232,7 @@ public:
         label_11->setText(QCoreApplication::translate("ReconstructionDockWidget", "\351\242\204\346\265\213\347\273\223\346\236\234\345\255\230\345\202\250\344\275\215\347\275\256 :", nullptr));
         pushButton_selectSvg->setText(QCoreApplication::translate("ReconstructionDockWidget", "\346\265\217\350\247\210...", nullptr));
         label_18->setText(QCoreApplication::translate("ReconstructionDockWidget", "\351\242\204\346\265\213\347\273\223\346\236\234\345\220\215\347\247\260 :", nullptr));
-        lineEdit_svgName_2->setText(QString());
+        lineEdit_svgName->setText(QString());
         label_19->setText(QCoreApplication::translate("ReconstructionDockWidget", "\351\227\256\351\242\230\346\217\217\350\277\260 :", nullptr));
         lineEdit_svgInf_2->setText(QString());
         pushButton_start->setText(QCoreApplication::translate("ReconstructionDockWidget", "\345\274\200\345\247\213", nullptr));

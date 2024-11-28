@@ -8,14 +8,16 @@ CONFIG += c++17
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-INCLUDEPATH += $$PWD/build/Desktop_Qt_5_15_2_MSVC2019_64bit-Release/release/aerialformer/include
-LIBS += -L$$PWD/build/Desktop_Qt_5_15_2_MSVC2019_64bit-Release/release/aerialformer/libs -lpython39
+INCLUDEPATH += ../Desktop_Qt_5_15_2_MSVC2019_64bit-Release/release/qgis_env/Lib/site-packages/numpy/core/include
+
+INCLUDEPATH += ../Desktop_Qt_5_15_2_MSVC2019_64bit-Release/release/qgis_env/include
+LIBS += -L../Desktop_Qt_5_15_2_MSVC2019_64bit-Release/release/qgis_env/libs -lpython39
 
 INCLUDEPATH += D:\\OSGeo4W\\apps\\qgis-dev\\include
 INCLUDEPATH += D:\\OSGeo4w\\include
 
 LIBS += -L"D:\\OSGeo4W\\apps\\qgis-dev\\lib" -lqgis_app -lqgis_core -lqgis_gui -lqgis_native -lqgis_3d
-
+LIBS += -LD:/OSGeo4W/lib -lgdal_i    # 使用 OSGeo4W 的 libgdal_i.lib
 QMAKE_POST_LINK += $$quote(export PROJ_LIB=D:\\OSGeo4W\\share\\proj &&)
 
 SOURCES += \
@@ -28,11 +30,15 @@ SOURCES += \
     segmentationdockwidget.cpp
 
 HEADERS += \
+    PyThreadStateLock.h \
     changedetectiondockwidget.h \
+    changedetectionwork.h \
     mainwindows.h \
     objectdetectiondockwidget.h \
+    pythonworker.h \
     qgis_devlayertreeviewmenuprovider.h \
     reconstructiondockwidget.h \
+    reconstructionwork.h \
     segmentationdockwidget.h
 
 FORMS += \

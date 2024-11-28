@@ -15,7 +15,8 @@ class SegmentationDockWidget : public QDockWidget
 public:
     explicit SegmentationDockWidget(MainWindow* mainWindow,QWidget *parent = nullptr);
     ~SegmentationDockWidget();
-
+    // void PythonInit();
+    void RunPY();
 
 private slots:
     void on_pushButton_start_clicked();

@@ -22,6 +22,7 @@
 #include "qgslayertreeregistrybridge.h"        //创建与层树根同步给定项目的实例,收听地图层注册表中的更新，并在层树中进行更改。
 
 #include <qgscolorrampshader.h>
+
 //3d
 #include <Qgs3DMapCanvas.h>
 #include <Qgs3DMapSettings.h>
@@ -29,10 +30,21 @@
 #include <qgs3dmapcontroller.h>
 #include "qgswindow3dengine.h"
 
+#include <cpl_conv.h>  // CPLSetConfigOption
+#include <gdal.h>      // GDAL 库核心
+
+//python
+#undef slots
+#include "Python.h"
+#define slots Q_SLOTS
+#include "PyThreadStateLock.h"
+
 MainWindow *MainWindow::my = nullptr;
 
 MainWindow::~MainWindow()
 {
+    // 关闭 Python 环境
+    Py_Finalize();
     delete ui;
 }
 
@@ -45,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     setWindowTitle(u8"高分遥感图像分析");
 
-    this->resize(1500, 600);        //设置窗口大小
+    this->resize(2200, 600);        //设置窗口大小
 
     tabWidget = new QTabWidget();
 
@@ -70,14 +82,28 @@ MainWindow::MainWindow(QWidget *parent)
     mapCanvas->setVisible(true);
     mapCanvas->enableAntiAliasing(true);
 
-    // 将地图画布添加到分页控件中
+    // 创建QTabWidget并添加第一个和第二个预览
+    tabWidget = new QTabWidget();
     tabWidget->addTab(mapCanvas1, u8"预览1");
     tabWidget->addTab(mapCanvas2, u8"预览2");
-    tabWidget->addTab(mapCanvas, u8"输出");
 
-    auto gridLayout = new QGridLayout;
-    gridLayout->addWidget(tabWidget);
-    centralWidget()->setLayout(gridLayout);
+    QTabWidget *outputWidget = new QTabWidget;
+    outputWidget->addTab(mapCanvas,u8"结果");
+
+    // 创建一个水平布局来排列tabWidget和第三个画布
+    QHBoxLayout *middleLayout = new QHBoxLayout;
+
+    // 将tabWidget添加到水平布局的左边
+    middleLayout->addWidget(tabWidget, 1);  // 左边，占1份宽度
+
+    // 将第三个画布放在tabWidget右边
+    middleLayout->addWidget(outputWidget, 1);  // 右边，占1份宽度
+
+    // 将布局设置到中央区域
+    QWidget *centralWidget = new QWidget(this);
+    centralWidget->setLayout(middleLayout);
+    setCentralWidget(centralWidget);
+
 
     //初始化图层管理器
     layerTreeView = new QgsLayerTreeView(this);
@@ -118,12 +144,13 @@ MainWindow::MainWindow(QWidget *parent)
     setting = new QSettings(QCoreApplication::applicationDirPath() + "/layout_config.txt",QSettings::IniFormat);
     setting->setIniCodec(QTextCodec::codecForName("utf-8"));//文件字节编码设置成utf-8
 
-
+    PythonInit();
 }
 
 
 void MainWindow::on_actionOpen_raster_triggered()
 {
+
     //步骤1：打开文件选择对话框
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open raster file"), "", "remote sensing image(*.jpg *.jpeg *.png *.bmp *.img);;image(*.tif *.tiff)");
     if (fileName.isNull()) //如果文件未选择则返回
@@ -133,8 +160,10 @@ void MainWindow::on_actionOpen_raster_triggered()
     QStringList temp = fileName.split('/');
     QString basename = temp.at(temp.size() - 1);//获取栅格数据名称
 
-    //步骤2：创建QgsRasterLayer类
+    // 步骤2：创建 QgsRasterLayer 类
     QgsRasterLayer* rasterLayer = new QgsRasterLayer(fileName, basename, "gdal");
+
+
     //如果不是geotiff文件，则提示错误
     if (!rasterLayer->isValid())
     {
@@ -142,6 +171,8 @@ void MainWindow::on_actionOpen_raster_triggered()
         return;
     }
 
+    // 步骤3：设置 GDAL 选项 (绕过地理变换)
+    rasterLayer->setDataSource(fileName, basename, "gdal", "SRC_METHOD=NO_GEOTRANSFORM");
 
     //步骤3：添加栅格数据
     QgsProject::instance()->addMapLayer(rasterLayer); //注册
@@ -151,7 +182,6 @@ void MainWindow::on_actionOpen_raster_triggered()
     mapCanvas->setVisible(true);
     mapCanvas->freeze(false);
     mapCanvas->refresh();                           //更新画布
-
 }
 
 
@@ -186,79 +216,6 @@ void MainWindow::on_actionOpen_vector_triggered()
 }
 
 
-
-//TEST
-void MainWindow::on_actiontest_triggered()
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open raster file"), "", "remote sensing image(*.jpg *.jpeg *.png *.bmp);;image(*.tif *.tiff)");
-    if (fileName.isNull()) //如果文件未选择则返回
-    {
-        return;
-    }
-    QStringList temp = fileName.split('/');
-    QString basename = temp.at(temp.size() - 1);//获取栅格数据名称
-
-    // 1. 加载mask图层
-    QgsRasterLayer* maskLayer = new QgsRasterLayer(fileName, basename, "gdal");
-    if (!maskLayer->isValid())
-    {
-        qDebug() << "Mask layer failed to load!";
-        return;
-    }
-
-    // 2. 创建颜色映射
-    QgsRasterShader* rasterShader = new QgsRasterShader();
-    QgsColorRampShader* colorRampShader = new QgsColorRampShader();
-
-    // 使用Qgis::ShaderInterpolationMethod 来设置颜色映射类型
-    colorRampShader->setColorRampType(Qgis::ShaderInterpolationMethod::Linear);
-
-    // 使用QList来存储ColorRampItem
-    QList<QgsColorRampShader::ColorRampItem> colorRampItems;
-
-    // 定义每个类别的颜色
-    // 0 - impervious_surface
-    colorRampItems.append(QgsColorRampShader::ColorRampItem(0, QColor(255, 255, 255), "Impervious Surface"));
-
-    // 1 - building
-    colorRampItems.append(QgsColorRampShader::ColorRampItem(1, QColor(255, 0, 0), "Building"));
-
-    // 2 - meadow
-    colorRampItems.append(QgsColorRampShader::ColorRampItem(2, QColor(0, 255, 0), "Meadow"));
-
-    // 3 - tree
-    colorRampItems.append(QgsColorRampShader::ColorRampItem(3, QColor(0, 128, 0), "Tree"));
-
-    // 4 - car
-    colorRampItems.append(QgsColorRampShader::ColorRampItem(4, QColor(0, 0, 255), "Car"));
-
-    // 255 - 背景类
-    colorRampItems.append(QgsColorRampShader::ColorRampItem(255, QColor(0, 0, 0, 0), "Background"));
-
-    // 将ColorRampItem列表应用到colorRampShader
-    colorRampShader->setColorRampItemList(colorRampItems);
-    rasterShader->setRasterShaderFunction(colorRampShader);
-    int band = 1; // 假设我们使用的是第一个波段
-
-    // 3. 创建渲染器并应用颜色映射
-    QgsRasterRenderer* renderer = new QgsSingleBandPseudoColorRenderer(maskLayer->dataProvider(), band, rasterShader);
-
-    maskLayer->setRenderer(renderer);
-    maskLayer->setOpacity(0.3);
-
-    // 4. 将mask图层添加到当前项目并显示在canvas上
-    QgsProject::instance()->addMapLayer(maskLayer); //注册
-    mapCanvas->setExtent(maskLayer->extent());     //将画布范围设置为栅格图层范围
-    layers.append(maskLayer);                      //将栅格图层追加到链表中
-    mapCanvas->setLayers(layers);                    //将图层画到画布上
-    mapCanvas->setVisible(true);
-    mapCanvas->freeze(false);
-    mapCanvas->refresh();                           //更新画布
-
-}
-
-
-
 void MainWindow::on_actionRemove_file_triggered()
 {
     layers.clear();                                 //从链表中清除所有图层
@@ -266,6 +223,9 @@ void MainWindow::on_actionRemove_file_triggered()
     mapCanvas->setVisible(true);
     mapCanvas->freeze(false);
     mapCanvas->refresh();                           //更新画布
+
+    mapCanvas1->setLayers(QList<QgsMapLayer *>());
+    mapCanvas2->setLayers(QList<QgsMapLayer *>());
     // 清空图层管理器中的内容
 
     QgsProject* project = QgsProject::instance();
@@ -514,31 +474,43 @@ void MainWindow::hideSelectedLayers()
 
 void MainWindow::removeLayer()
 {
-    if(!layerTreeView)
+    if (!layerTreeView)
         return;
-    //    const QList<QgsMapLayer *> selectedLayers = mLayerTreeView->selectedLayersRecursive();
 
-    if ( QMessageBox::warning(my, tr( "Remove layers and groups" ), tr("Are you sure?"), QMessageBox::Ok | QMessageBox::Cancel ) == QMessageBox::Cancel )
+    if (QMessageBox::warning(my, tr("Remove layers and groups"), tr("Are you sure?"), QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel)
     {
         return;
     }
 
-    const QList<QgsLayerTreeNode *> selectedNodes = layerTreeView->selectedNodes( true );
-    for ( QgsLayerTreeNode *node : selectedNodes )
+    const QList<QgsLayerTreeNode *> selectedNodes = layerTreeView->selectedNodes(true);
+    for (QgsLayerTreeNode *node : selectedNodes)
     {
-        if ( QgsLayerTreeGroup *group = qobject_cast< QgsLayerTreeGroup * >( node ) )
+        if (QgsLayerTreeGroup *group = qobject_cast<QgsLayerTreeGroup *>(node))
         {
-            if ( QgsGroupLayer *groupLayer = group->groupLayer() )
+            if (QgsGroupLayer *groupLayer = group->groupLayer())
             {
-                QgsProject::instance()->removeMapLayer( groupLayer );
+                // 清理与栅格图层相关的缓存
+                if (QgsRasterLayer *rasterLayer = qobject_cast<QgsRasterLayer *>(groupLayer))
+                {
+                    // 移除栅格图层的缓存文件（如 .aux.xml 文件）
+                    QString rasterFilePath = rasterLayer->dataProvider()->dataSourceUri();
+                    QString auxXmlFilePath = rasterFilePath + ".aux.xml"; // 检查和删除 .aux.xml 文件
+                    QFile::remove(auxXmlFilePath);
+                }
+                // 从项目中移除图层
+                QgsProject::instance()->removeMapLayer(groupLayer);
             }
         }
-        QgsLayerTreeGroup *parentGroup = qobject_cast<QgsLayerTreeGroup *>( node->parent() );
-        if ( parentGroup )
-            parentGroup->removeChildNode( node );
+
+        // 移除节点
+        QgsLayerTreeGroup *parentGroup = qobject_cast<QgsLayerTreeGroup *>(node->parent());
+        if (parentGroup)
+            parentGroup->removeChildNode(node);
     }
+
     mapCanvas->refresh();
 }
+
 
 //布局设置
 void MainWindow::slot_save_layout()
@@ -631,3 +603,101 @@ void MainWindow::on_action3dtest_triggered()
     canvas->show();
 }
 
+
+void MainWindow::on_actionImport_mask_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open raster file"), "", "remote sensing image(*.jpg *.jpeg *.png *.bmp);;image(*.tif *.tiff)");
+    if (fileName.isNull()) //如果文件未选择则返回
+    {
+        return;
+    }
+    QStringList temp = fileName.split('/');
+    QString basename = temp.at(temp.size() - 1);//获取栅格数据名称
+
+    // 1. 加载mask图层
+    QgsRasterLayer* maskLayer = new QgsRasterLayer(fileName, basename, "gdal");
+    if (!maskLayer->isValid())
+    {
+        qDebug() << "Mask layer failed to load!";
+        return;
+    }
+
+    // 2. 创建颜色映射
+    QgsRasterShader* rasterShader = new QgsRasterShader();
+    QgsColorRampShader* colorRampShader = new QgsColorRampShader();
+
+    // 使用Qgis::ShaderInterpolationMethod 来设置颜色映射类型
+    colorRampShader->setColorRampType(Qgis::ShaderInterpolationMethod::Linear);
+
+    // 使用QList来存储ColorRampItem
+    QList<QgsColorRampShader::ColorRampItem> colorRampItems;
+
+    // 定义每个类别的颜色
+    // 0 - impervious_surface
+    colorRampItems.append(QgsColorRampShader::ColorRampItem(0, QColor(255, 255, 255), "Impervious Surface"));
+
+    // 1 - building
+    colorRampItems.append(QgsColorRampShader::ColorRampItem(1, QColor(255, 0, 0), "Building"));
+
+    // 2 - meadow
+    colorRampItems.append(QgsColorRampShader::ColorRampItem(2, QColor(0, 255, 0), "Meadow"));
+
+    // 3 - tree
+    colorRampItems.append(QgsColorRampShader::ColorRampItem(3, QColor(0, 128, 0), "Tree"));
+
+    // 4 - car
+    colorRampItems.append(QgsColorRampShader::ColorRampItem(4, QColor(0, 0, 255), "Car"));
+
+    // 255 - 背景类
+    colorRampItems.append(QgsColorRampShader::ColorRampItem(255, QColor(0, 0, 0, 0), "Background"));
+
+    // 将ColorRampItem列表应用到colorRampShader
+    colorRampShader->setColorRampItemList(colorRampItems);
+    rasterShader->setRasterShaderFunction(colorRampShader);
+    int band = 1; // 假设我们使用的是第一个波段
+
+    // 3. 创建渲染器并应用颜色映射
+    QgsRasterRenderer* renderer = new QgsSingleBandPseudoColorRenderer(maskLayer->dataProvider(), band, rasterShader);
+
+    maskLayer->setRenderer(renderer);
+    maskLayer->setOpacity(0.3);
+
+    // 4. 将mask图层添加到当前项目并显示在canvas上
+    QgsProject::instance()->addMapLayer(maskLayer); //注册
+    mapCanvas->setExtent(maskLayer->extent());     //将画布范围设置为栅格图层范围
+    layers.append(maskLayer);                      //将栅格图层追加到链表中
+    mapCanvas->setLayers(layers);                    //将图层画到画布上
+    mapCanvas->setVisible(true);
+    mapCanvas->freeze(false);
+    mapCanvas->refresh();                           //更新画布
+
+}
+
+//python只需要初始化一次
+void MainWindow::PythonInit()
+{
+    if( !Py_IsInitialized() )
+    {
+        //1.初始化Python解释器，这是调用操作的第一步
+        QString path = QCoreApplication::applicationDirPath() + "/qgis_env/";
+        Py_SetPythonHome((wchar_t *)(reinterpret_cast<const wchar_t *>(path.utf16())));
+
+        Py_Initialize();
+        if( !Py_IsInitialized() ){
+            qDebug(u8"初始化Python解释器失败");
+        }else{
+            // 初始化线程支持
+            PyEval_InitThreads();
+
+            qDebug() << "Adding script directory to sys.path...";
+            PyRun_SimpleString("import sys");
+            PyRun_SimpleString("sys.path.append('./release/py_scripts/AerialFormer')");
+            PyRun_SimpleString("sys.path.append('./release/py_scripts/Reconstruction')");
+            PyRun_SimpleString("sys.path.append('./release/py_scripts/ChangeDetection')");
+
+            // 启动子线程前执行，为了释放PyEval_InitThreads获得的全局锁，否则子线程可能无法获取到全局锁。
+            PyEval_ReleaseThread(PyThreadState_Get());
+            qDebug(u8"初始化Python解释器成功");
+        }
+    }
+}

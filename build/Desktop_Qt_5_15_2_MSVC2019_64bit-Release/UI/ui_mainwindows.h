@@ -28,7 +28,7 @@ public:
     QAction *actionRemove_file;
     QAction *actionAbout;
     QAction *actionSegmentation;
-    QAction *actiontest;
+    QAction *actionImport_mask;
     QAction *action3dtest;
     QWidget *centralwidget;
     QMenuBar *menubar;
@@ -54,8 +54,8 @@ public:
         actionAbout->setObjectName(QString::fromUtf8("actionAbout"));
         actionSegmentation = new QAction(MainWindow);
         actionSegmentation->setObjectName(QString::fromUtf8("actionSegmentation"));
-        actiontest = new QAction(MainWindow);
-        actiontest->setObjectName(QString::fromUtf8("actiontest"));
+        actionImport_mask = new QAction(MainWindow);
+        actionImport_mask->setObjectName(QString::fromUtf8("actionImport_mask"));
         action3dtest = new QAction(MainWindow);
         action3dtest->setObjectName(QString::fromUtf8("action3dtest"));
         centralwidget = new QWidget(MainWindow);
@@ -84,7 +84,7 @@ public:
         menuFile->addAction(actionOpen_raster);
         menuFile->addAction(actionOpen_vector);
         menuFile->addAction(actionRemove_file);
-        menuFile->addAction(actiontest);
+        menuFile->addAction(actionImport_mask);
         menuFile->addAction(action3dtest);
         menuHelp->addAction(actionAbout);
 
@@ -101,7 +101,10 @@ public:
         actionRemove_file->setText(QCoreApplication::translate("MainWindow", "Remove file", nullptr));
         actionAbout->setText(QCoreApplication::translate("MainWindow", "About", nullptr));
         actionSegmentation->setText(QCoreApplication::translate("MainWindow", "Segmentation", nullptr));
-        actiontest->setText(QCoreApplication::translate("MainWindow", "test", nullptr));
+        actionImport_mask->setText(QCoreApplication::translate("MainWindow", "Import mask", nullptr));
+#if QT_CONFIG(tooltip)
+        actionImport_mask->setToolTip(QCoreApplication::translate("MainWindow", "Import mask", nullptr));
+#endif // QT_CONFIG(tooltip)
         action3dtest->setText(QCoreApplication::translate("MainWindow", "3dtest", nullptr));
         menuFile->setTitle(QCoreApplication::translate("MainWindow", "File", nullptr));
         menuHelp->setTitle(QCoreApplication::translate("MainWindow", "Help", nullptr));

@@ -33,7 +33,7 @@
     <addaction name="actionOpen_raster"/>
     <addaction name="actionOpen_vector"/>
     <addaction name="actionRemove_file"/>
-    <addaction name="actiontest"/>
+    <addaction name="actionImport_mask"/>
     <addaction name="action3dtest"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -83,9 +83,12 @@
     <string>Segmentation</string>
    </property>
   </action>
-  <action name="actiontest">
+  <action name="actionImport_mask">
    <property name="text">
-    <string>test</string>
+    <string>Import mask</string>
+   </property>
+   <property name="toolTip">
+    <string>Import mask</string>
    </property>
   </action>
   <action name="action3dtest">

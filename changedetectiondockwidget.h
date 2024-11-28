@@ -23,6 +23,8 @@ private slots:
 
     void on_pushButton_selectSvg_clicked();
 
+    void on_pushButton_start_clicked();
+
 private:
     Ui::ChangeDetectionDockWidget *ui;
     MainWindow* mainWindow;
