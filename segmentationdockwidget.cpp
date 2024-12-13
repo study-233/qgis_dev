@@ -4,7 +4,7 @@
 
 #include "mainwindows.h"
 #include "QMessageBox"
-#include "pythonworker.h"
+#include "segmentationworker.h"
 
 SegmentationDockWidget::SegmentationDockWidget(MainWindow* mainWindow,QWidget *parent)
     : QDockWidget(parent),
@@ -34,6 +34,7 @@ void SegmentationDockWidget::on_pushButton_selectUpl_clicked()
 {
 
     uplfileName = QFileDialog::getOpenFileName(this, tr("Open file"));
+
     if (uplfileName.isNull()) //如果文件未选择则返回
     {
         return;
@@ -54,9 +55,8 @@ void SegmentationDockWidget::on_pushButton_selectUpl_clicked()
         return;
     }
 
-    QgsProject::instance()->addMapLayer(rasterLayer);
-
-
+    // QgsProject::instance()->addMapLayer(rasterLayer);
+    mainWindow->Open_raster(uplfileName);
     // 清除当前图层
     mapCanvas1->setLayers(QList<QgsMapLayer *>());
     // 只设置在 mapCanvas1 上
@@ -103,24 +103,26 @@ void SegmentationDockWidget::on_pushButton_start_clicked()
     std::string imgPathStr = ui->lineEdit_img1->text().toStdString();
     std::string modelStr = ui->comboBox->currentText().toStdString();
     std::string savePathStr = ui->lineEdit_svgPath->text().toStdString();
-    std::string svgNameStr = ui->lineEdit_svgName->text().toStdString()+".png";
+    std::string svgNameStr = ui->lineEdit_svgName->text().toStdString();
 
     // 调试输出
-    qDebug() << QString::fromStdString(imgPathStr) << "cpu" << QString::fromStdString(modelStr)
+    qDebug() << QString::fromStdString(imgPathStr) << "cuda:0" << QString::fromStdString(modelStr)
              << QString::fromStdString(savePathStr) << QString::fromStdString(svgNameStr);
 
     // 创建 PythonWorker 实例，直接传递 std::string 对象
-    PythonWorker *worker = new PythonWorker(imgPathStr, "cpu", modelStr, savePathStr, svgNameStr, this);
+    SegmentationWorker *worker = new SegmentationWorker(imgPathStr, "cuda:0", modelStr, savePathStr, svgNameStr, this);
 
     // // 连接进度更新信号
     // connect(worker, &PythonWorker::progressUpdated, ui->progressBar, &QProgressBar::setValue);
 
     // 连接处理完成信号
-    connect(worker, &PythonWorker::processingFinished, this, [this, worker](bool success) {
+    connect(worker, &SegmentationWorker::processingFinished, this, [this, worker, savePathStr, svgNameStr](bool success) {
         worker->deleteLater();
         ui->progressBar->setValue(100);
         if (success) {
             QMessageBox::information(this, "Success", u8"生成成功");
+            QString fileName = QString::fromStdString(savePathStr +"/"+ svgNameStr + "_mask.png");
+            mainWindow->Import_mask(fileName);
         } else {
             QMessageBox::critical(this, "Error", u8"生成失败");
         }

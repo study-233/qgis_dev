@@ -1,8 +1,6 @@
 ﻿#ifndef CHANGEDETECTIONWORK_H
 #define CHANGEDETECTIONWORK_H
 
-#endif // CHANGEDETECTIONWORK_H
-
 #include "mainwindows.h"
 #include "PyThreadStateLock.h"
 
@@ -34,6 +32,8 @@ protected:
 
         class PyThreadStateLock PyThreadLock; // 获取全局锁
 
+        qDebug() << "ChangeDetectionwork Current working directory:" << QDir::currentPath();
+
         // 加载模块
         qDebug() << "Loading module 'inferpy'...";
         PyObject *pModule = PyImport_ImportModule("inferpy");
@@ -57,7 +57,7 @@ protected:
 
         // 创建参数元组
         qDebug() << "Creating argument tuple...";
-        PyObject *pArgs = PyTuple_New(6);
+        PyObject *pArgs = PyTuple_New(7);
 
         if (!pArgs) {
             qDebug() << "Failed to create argument tuple.";
@@ -74,7 +74,8 @@ protected:
         PyObject *deviceObj = PyUnicode_FromString(device.c_str());
         PyObject *modelObj = PyUnicode_FromString(model.c_str());
         PyObject *savePathObj = PyUnicode_FromString(save_path.c_str());
-        PyObject *svgNameObj = PyUnicode_FromString(svg_name.c_str());
+        PyObject *svgNameObj = PyUnicode_FromString((svg_name+".png").c_str());
+        PyObject *saveCaptionObj = PyUnicode_FromString((svg_name+".txt").c_str());
 
         PyTuple_SetItem(pArgs, 0, imgPathObj1); // pArgs的引用计数归于pArgs
         PyTuple_SetItem(pArgs, 1, imgPathObj2);
@@ -82,6 +83,7 @@ protected:
         PyTuple_SetItem(pArgs, 3, modelObj);
         PyTuple_SetItem(pArgs, 4, savePathObj);
         PyTuple_SetItem(pArgs, 5, svgNameObj);
+        PyTuple_SetItem(pArgs, 6, saveCaptionObj);
 
         // 调用Python函数
         qDebug() << "Calling Python function 'inferpy'...";
@@ -101,7 +103,10 @@ protected:
         Py_DECREF(pFunc);
         Py_DECREF(pModule);
 
+        qDebug() << "ChangeDetectionwork Current working directory:" << QDir::currentPath();
+
         emit processingFinished(success);
+
     }
 
 private:
@@ -111,6 +116,8 @@ private:
     std::string model;
     std::string save_path;
     std::string svg_name;
+
 };
 
+#endif // CHANGEDETECTIONWORK_H
 

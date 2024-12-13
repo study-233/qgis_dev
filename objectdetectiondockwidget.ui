@@ -51,7 +51,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QLineEdit" name="lineEdit_img">
+          <widget class="QLineEdit" name="lineEdit_img1">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -174,7 +174,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_svgName_2">
+        <widget class="QLineEdit" name="lineEdit_svgName">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -217,7 +217,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_svgInf_2">
+        <widget class="QLineEdit" name="lineEdit_svgInf">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
            <horstretch>0</horstretch>

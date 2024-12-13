@@ -1,6 +1,5 @@
-﻿#ifndef RECONSTRUCTIONWORK_H
-#define RECONSTRUCTIONWORK_H
-
+﻿#ifndef OBJECTDETECTIONWORK_H
+#define OBJECTDETECTIONWORK_H
 
 #include "mainwindows.h"
 #include "PyThreadStateLock.h"
@@ -15,14 +14,15 @@
 #include "Python.h"
 #define slots Q_SLOTS
 
-class Reconstructionwork : public QThread {
+class ObjectDetectionwork : public QThread {
     Q_OBJECT
 public:
-    Reconstructionwork(const std::string& img_path_, const std::string& device_, const std::string& model_, const std::string& save_path_, const std::string& svg_name_, QObject *parent = nullptr)
+    ObjectDetectionwork(const std::string& img_path_, const std::string& device_, const std::string& model_, const std::string& save_path_, const std::string& svg_name_, QObject *parent = nullptr)
         : QThread(parent), img_path(img_path_), device(device_), model(model_), save_path(save_path_), svg_name(svg_name_) {
         // 调试输出
-        qDebug() << "Initialized with:" << QString::fromStdString(img_path) << QString::fromStdString(device) << QString::fromStdString(model) << QString::fromStdString(save_path) << QString::fromStdString(svg_name);
+        // qDebug() << "Initialized with:" << QString::fromStdString(img_path) << QString::fromStdString(device) << QString::fromStdString(model) << QString::fromStdString(save_path) << QString::fromStdString(svg_name);
     }
+
 
 signals:
     void progressUpdated(int progress);    // 进度更新信号
@@ -31,23 +31,25 @@ signals:
 protected:
     void run() override {
 
+        qDebug() << "ObjectDetectionwork Current working directory:" << QDir::currentPath();
+
         class PyThreadStateLock PyThreadLock; // 获取全局锁
 
         // 加载模块
-        qDebug() << "Loading module 'safmn'...";
-        PyObject *pModule = PyImport_ImportModule("safmn");
+        qDebug() << "Loading module 'object_detection'...";
+        PyObject *pModule = PyImport_ImportModule("object_detection_");
         if (!pModule) {
-            qDebug() << "Failed to load module 'safmn'.";
+            qDebug() << "Failed to load module 'object_detection'.";
             PyErr_Print();  // 打印错误信息
             emit processingFinished(false);
             return;
         }
 
         // 获取函数
-        qDebug() << "Getting function 'safmn'...";
-        PyObject *pFunc = PyObject_GetAttrString(pModule, "safmn");
+        qDebug() << "Getting function 'object_detection'...";
+        PyObject *pFunc = PyObject_GetAttrString(pModule, "object_detection");
         if (!pFunc || !PyCallable_Check(pFunc)) {
-            qDebug() << "Function 'safmn' not callable or not found.";
+            qDebug() << "Function 'object_detection' not callable or not found.";
             PyErr_Print();  // 打印错误信息
             Py_XDECREF(pModule);
             emit processingFinished(false);
@@ -56,7 +58,7 @@ protected:
 
         // 创建参数元组
         qDebug() << "Creating argument tuple...";
-        PyObject *pArgs = PyTuple_New(5);
+        PyObject *pArgs = PyTuple_New(4);
 
         if (!pArgs) {
             qDebug() << "Failed to create argument tuple.";
@@ -67,21 +69,31 @@ protected:
             return;
         }
 
-        // 设置参数
+        qDebug()<< img_path.c_str() << device.c_str() << model.c_str() << save_path.c_str() << svg_name.c_str();
+
         PyObject *imgPathObj = PyUnicode_FromString(img_path.c_str());
         PyObject *deviceObj = PyUnicode_FromString(device.c_str());
         PyObject *modelObj = PyUnicode_FromString(model.c_str());
-        PyObject *savePathObj = PyUnicode_FromString(save_path.c_str());
-        PyObject *svgNameObj = PyUnicode_FromString((svg_name+".png").c_str());
+        // PyObject *savePathObj = PyUnicode_FromString(save_path.c_str());
+        // PyObject *svgNameObj = PyUnicode_FromString(svg_name.c_str());
+
+        // 合并 save_path 和 svg_name 为完整路径
+        std::string savefile = save_path + "/" + svg_name + ".png";
+
+        // 创建 PyObject 对象
+        PyObject *savefileObj = PyUnicode_FromString(savefile.c_str());
+
+        // 打印调试信息
+        qDebug() << "savefile path:" << QString::fromStdString(savefile);
 
         PyTuple_SetItem(pArgs, 0, imgPathObj); // pArgs的引用计数归于pArgs
         PyTuple_SetItem(pArgs, 1, deviceObj);
         PyTuple_SetItem(pArgs, 2, modelObj);
-        PyTuple_SetItem(pArgs, 3, savePathObj);
-        PyTuple_SetItem(pArgs, 4, svgNameObj);
+        PyTuple_SetItem(pArgs, 3, savefileObj);
+        // PyTuple_SetItem(pArgs, 4, svgNameObj);
 
         // 调用Python函数
-        qDebug() << "Calling Python function 'safmn'...";
+        qDebug() << "Calling Python function 'object_detection'...";
         PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
 
         bool success = (pResult != nullptr);
@@ -110,5 +122,5 @@ private:
 
 };
 
+#endif // OBJECTDETECTIONWORK_H
 
-#endif // RECONSTRUCTIONWORK_H

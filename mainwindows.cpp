@@ -24,11 +24,11 @@
 #include <qgscolorrampshader.h>
 
 //3d
-#include <Qgs3DMapCanvas.h>
-#include <Qgs3DMapSettings.h>
-#include <Qgs3DMapScene.h>
-#include <qgs3dmapcontroller.h>
-#include "qgswindow3dengine.h"
+// #include <Qgs3DMapCanvas.h>
+// #include <Qgs3DMapSettings.h>
+// #include <Qgs3DMapScene.h>
+// #include <qgs3dmapcontroller.h>
+// #include "qgswindow3dengine.h"
 
 #include <cpl_conv.h>  // CPLSetConfigOption
 #include <gdal.h>      // GDAL 库核心
@@ -146,13 +146,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     PythonInit();
 }
-
-
-void MainWindow::on_actionOpen_raster_triggered()
-{
-
-    //步骤1：打开文件选择对话框
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open raster file"), "", "remote sensing image(*.jpg *.jpeg *.png *.bmp *.img);;image(*.tif *.tiff)");
+void MainWindow::Open_raster(QString fileName){
     if (fileName.isNull()) //如果文件未选择则返回
     {
         return;
@@ -182,6 +176,19 @@ void MainWindow::on_actionOpen_raster_triggered()
     mapCanvas->setVisible(true);
     mapCanvas->freeze(false);
     mapCanvas->refresh();                           //更新画布
+    QString auxFile = fileName + ".aux.xml";
+    QFile::remove(auxFile);  // 删除辅助文件
+}
+
+void MainWindow::on_actionOpen_raster_triggered()
+{
+    //步骤1：打开文件选择对话框
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open raster file"), "", "remote sensing image(*.jpg *.jpeg *.png *.bmp *.img);;image(*.tif *.tiff)");
+    if (fileName.isNull()) //如果文件未选择则返回
+    {
+        return;
+    }
+    Open_raster(fileName);
 }
 
 
@@ -533,80 +540,74 @@ void MainWindow::slot_restart_layout()
 }
 
 
+// void MainWindow::on_action3dtest_triggered()
+// {
+//     // 让用户选择图层文件
+//     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Layer"), "", tr("All Files (*);;Shapefiles (*.shp)"));
+
+//     if (fileName.isEmpty())
+//     {
+//         QMessageBox::warning(this, tr("Layer Error"), tr("No layer selected!"));
+//         return;
+//     }
 
 
-void MainWindow::on_action3dtest_triggered()
-{
-    // 让用户选择图层文件
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Layer"), "", tr("All Files (*);;Shapefiles (*.shp)"));
+//     // 创建图层
+//     QgsRasterLayer* rasterLayer = new QgsRasterLayer(fileName, "gdal");
 
-    if (fileName.isEmpty())
-    {
-        QMessageBox::warning(this, tr("Layer Error"), tr("No layer selected!"));
-        return;
-    }
+//     // 检查图层是否有效
+//     if (!rasterLayer->isValid())
+//     {
+//         QMessageBox::warning(this, tr("Layer Error"), tr("The layer is not valid!"));
+//         delete rasterLayer; // 清理无效图层
+//         return;
+//     }
 
+//     // 创建 3D 地图画布
+//     canvas = new Qgs3DMapCanvas();
 
-    // 创建图层
-    QgsRasterLayer* rasterLayer = new QgsRasterLayer(fileName, "gdal");
+//     // 使用 Qgs3DMapCanvas 实例创建 QgsWindow3DEngine
+//     engine = new QgsWindow3DEngine(canvas);
 
-    // 检查图层是否有效
-    if (!rasterLayer->isValid())
-    {
-        QMessageBox::warning(this, tr("Layer Error"), tr("The layer is not valid!"));
-        delete rasterLayer; // 清理无效图层
-        return;
-    }
+//     // 创建 3D 地图设置
+//     Qgs3DMapSettings *mapSettings = new Qgs3DMapSettings();
+//     mapSettings->setCrs(QgsCoordinateReferenceSystem("EPSG:4326")); // 设置坐标参考系统
+//     mapSettings->setExtent(QgsRectangle(-180, -90, 180, 90)); // 设置视图范围
+//     mapSettings->setBackgroundColor(QColor(255, 255, 255)); // 设置背景颜色为白色
 
-    // 创建 3D 地图画布
-    canvas = new Qgs3DMapCanvas();
+//     // 确保 rasterLayer 已正确初始化
+//     if (rasterLayer && rasterLayer->isValid()) {
+//         mapSettings->setLayers({rasterLayer});  // 添加图层到地图设置
+//     } else {
+//         qDebug() << "Raster layer is invalid or not initialized.";
+//     }
 
-    // 使用 Qgs3DMapCanvas 实例创建 QgsWindow3DEngine
-    engine = new QgsWindow3DEngine(canvas);
+//     // 创建 3D 场景，传递地图设置和引擎
+//     scene = new Qgs3DMapScene(*mapSettings, engine);
 
-    // 创建 3D 地图设置
-    Qgs3DMapSettings *mapSettings = new Qgs3DMapSettings();
-    mapSettings->setCrs(QgsCoordinateReferenceSystem("EPSG:4326")); // 设置坐标参考系统
-    mapSettings->setExtent(QgsRectangle(-180, -90, 180, 90)); // 设置视图范围
-    mapSettings->setBackgroundColor(QColor(255, 255, 255)); // 设置背景颜色为白色
+//     // 设置根实体到引擎
+//     engine->setRootEntity(scene);
 
-    // 确保 rasterLayer 已正确初始化
-    if (rasterLayer && rasterLayer->isValid()) {
-        mapSettings->setLayers({rasterLayer});  // 添加图层到地图设置
-    } else {
-        qDebug() << "Raster layer is invalid or not initialized.";
-    }
+//     // canvas->show();
+//     // // 将 3D 地图画布放入一个 QWidget 中
+//     // widget = new QWidget();
+//     // QVBoxLayout *layout = new QVBoxLayout(widget);
+//     // layout->addWidget(QWidget::createWindowContainer(canvas));
 
-    // 创建 3D 场景，传递地图设置和引擎
-    scene = new Qgs3DMapScene(*mapSettings, engine);
+//     // // 添加到 tabWidget
+//     // tabWidget->addTab(widget, u8"3D 视图");
 
-    // 设置根实体到引擎
-    engine->setRootEntity(scene);
+//     // 配置画布
+//     canvas->setMapSettings(mapSettings);
 
-    // canvas->show();
-    // // 将 3D 地图画布放入一个 QWidget 中
-    // widget = new QWidget();
-    // QVBoxLayout *layout = new QVBoxLayout(widget);
-    // layout->addWidget(QWidget::createWindowContainer(canvas));
+//     // 你可以在此处设置相机视角等
+//     canvas->resetView(); // 重置视角
 
-    // // 添加到 tabWidget
-    // tabWidget->addTab(widget, u8"3D 视图");
+//     scene->viewZoomFull();  // 使相机调整到适合的视角
 
-    // 配置画布
-    canvas->setMapSettings(mapSettings);
-
-    // 你可以在此处设置相机视角等
-    canvas->resetView(); // 重置视角
-
-    scene->viewZoomFull();  // 使相机调整到适合的视角
-
-    canvas->show();
-}
-
-
-void MainWindow::on_actionImport_mask_triggered()
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open raster file"), "", "remote sensing image(*.jpg *.jpeg *.png *.bmp);;image(*.tif *.tiff)");
+//     canvas->show();
+// }
+void MainWindow::Import_mask(QString fileName){
     if (fileName.isNull()) //如果文件未选择则返回
     {
         return;
@@ -619,6 +620,7 @@ void MainWindow::on_actionImport_mask_triggered()
     if (!maskLayer->isValid())
     {
         qDebug() << "Mask layer failed to load!";
+        qDebug() << fileName;
         return;
     }
 
@@ -670,10 +672,15 @@ void MainWindow::on_actionImport_mask_triggered()
     mapCanvas->setVisible(true);
     mapCanvas->freeze(false);
     mapCanvas->refresh();                           //更新画布
-
 }
 
-//python只需要初始化一次
+void MainWindow::on_actionImport_mask_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open raster file"), "", "remote sensing image(*.jpg *.jpeg *.png *.bmp);;image(*.tif *.tiff)");
+    Import_mask(fileName);
+}
+
+// python只需要初始化一次
 void MainWindow::PythonInit()
 {
     if( !Py_IsInitialized() )
@@ -694,6 +701,7 @@ void MainWindow::PythonInit()
             PyRun_SimpleString("sys.path.append('./release/py_scripts/AerialFormer')");
             PyRun_SimpleString("sys.path.append('./release/py_scripts/Reconstruction')");
             PyRun_SimpleString("sys.path.append('./release/py_scripts/ChangeDetection')");
+            PyRun_SimpleString("sys.path.append('./release/py_scripts/ObjectDetection')");
 
             // 启动子线程前执行，为了释放PyEval_InitThreads获得的全局锁，否则子线程可能无法获取到全局锁。
             PyEval_ReleaseThread(PyThreadState_Get());

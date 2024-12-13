@@ -26,11 +26,16 @@
 #include "QOpenGLFunctions"
 #include <Qgs3DMapCanvas.h>
 
+class ObjectDetectionDockWidget;
+
 QT_BEGIN_NAMESPACE
+
 namespace Ui {
 class MainWindow;
 }
+
 QT_END_NAMESPACE
+
 
 class MainWindow : public QMainWindow ,protected QOpenGLFunctions
 {
@@ -70,7 +75,7 @@ private slots:
 
     void slot_restart_layout();
 
-    void on_action3dtest_triggered();
+    // void on_action3dtest_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -109,6 +114,7 @@ public:
     void initLayerTreeView();               //初始化图层管理器函数
     void addDockWidget(Qt::DockWidgetArea area, QDockWidget* dockwidget); //添加可悬浮窗口初始位置
     void legendLayerZoomNative();
-
+    void Import_mask(QString fileName);
+    void Open_raster(QString fileName);
 };
 #endif // MAINWINDOW_H

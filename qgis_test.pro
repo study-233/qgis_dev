@@ -35,11 +35,12 @@ HEADERS += \
     changedetectionwork.h \
     mainwindows.h \
     objectdetectiondockwidget.h \
-    pythonworker.h \
+    objectdetectionwork.h \
     qgis_devlayertreeviewmenuprovider.h \
     reconstructiondockwidget.h \
     reconstructionwork.h \
-    segmentationdockwidget.h
+    segmentationdockwidget.h \
+    segmentationworker.h
 
 FORMS += \
     changedetectiondockwidget.ui \

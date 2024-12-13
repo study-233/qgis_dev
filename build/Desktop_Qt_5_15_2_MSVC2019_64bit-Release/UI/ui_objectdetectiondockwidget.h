@@ -33,7 +33,7 @@ public:
     QVBoxLayout *verticalLayout;
     QLabel *label_16;
     QHBoxLayout *horizontalLayout;
-    QLineEdit *lineEdit_img;
+    QLineEdit *lineEdit_img1;
     QPushButton *pushButton_selectUpl;
     QLabel *label_17;
     QHBoxLayout *horizontalLayout_4;
@@ -43,9 +43,9 @@ public:
     QLineEdit *lineEdit_svgPath;
     QPushButton *pushButton_selectSvg;
     QLabel *label_18;
-    QLineEdit *lineEdit_svgName_2;
+    QLineEdit *lineEdit_svgName;
     QLabel *label_19;
-    QLineEdit *lineEdit_svgInf_2;
+    QLineEdit *lineEdit_svgInf;
     QHBoxLayout *horizontalLayout_2;
     QProgressBar *progressBar;
     QPushButton *pushButton_start;
@@ -82,16 +82,16 @@ public:
 
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
-        lineEdit_img = new QLineEdit(frame);
-        lineEdit_img->setObjectName(QString::fromUtf8("lineEdit_img"));
+        lineEdit_img1 = new QLineEdit(frame);
+        lineEdit_img1->setObjectName(QString::fromUtf8("lineEdit_img1"));
         QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Fixed);
         sizePolicy1.setHorizontalStretch(0);
         sizePolicy1.setVerticalStretch(0);
-        sizePolicy1.setHeightForWidth(lineEdit_img->sizePolicy().hasHeightForWidth());
-        lineEdit_img->setSizePolicy(sizePolicy1);
-        lineEdit_img->setMaximumSize(QSize(16777215, 16777215));
+        sizePolicy1.setHeightForWidth(lineEdit_img1->sizePolicy().hasHeightForWidth());
+        lineEdit_img1->setSizePolicy(sizePolicy1);
+        lineEdit_img1->setMaximumSize(QSize(16777215, 16777215));
 
-        horizontalLayout->addWidget(lineEdit_img);
+        horizontalLayout->addWidget(lineEdit_img1);
 
         pushButton_selectUpl = new QPushButton(frame);
         pushButton_selectUpl->setObjectName(QString::fromUtf8("pushButton_selectUpl"));
@@ -155,14 +155,14 @@ public:
 
         verticalLayout->addWidget(label_18);
 
-        lineEdit_svgName_2 = new QLineEdit(frame);
-        lineEdit_svgName_2->setObjectName(QString::fromUtf8("lineEdit_svgName_2"));
-        sizePolicy1.setHeightForWidth(lineEdit_svgName_2->sizePolicy().hasHeightForWidth());
-        lineEdit_svgName_2->setSizePolicy(sizePolicy1);
-        lineEdit_svgName_2->setMinimumSize(QSize(160, 20));
-        lineEdit_svgName_2->setMaximumSize(QSize(150, 16777215));
+        lineEdit_svgName = new QLineEdit(frame);
+        lineEdit_svgName->setObjectName(QString::fromUtf8("lineEdit_svgName"));
+        sizePolicy1.setHeightForWidth(lineEdit_svgName->sizePolicy().hasHeightForWidth());
+        lineEdit_svgName->setSizePolicy(sizePolicy1);
+        lineEdit_svgName->setMinimumSize(QSize(160, 20));
+        lineEdit_svgName->setMaximumSize(QSize(150, 16777215));
 
-        verticalLayout->addWidget(lineEdit_svgName_2);
+        verticalLayout->addWidget(lineEdit_svgName);
 
         label_19 = new QLabel(frame);
         label_19->setObjectName(QString::fromUtf8("label_19"));
@@ -172,17 +172,17 @@ public:
 
         verticalLayout->addWidget(label_19);
 
-        lineEdit_svgInf_2 = new QLineEdit(frame);
-        lineEdit_svgInf_2->setObjectName(QString::fromUtf8("lineEdit_svgInf_2"));
+        lineEdit_svgInf = new QLineEdit(frame);
+        lineEdit_svgInf->setObjectName(QString::fromUtf8("lineEdit_svgInf"));
         QSizePolicy sizePolicy2(QSizePolicy::Expanding, QSizePolicy::Minimum);
         sizePolicy2.setHorizontalStretch(0);
         sizePolicy2.setVerticalStretch(0);
-        sizePolicy2.setHeightForWidth(lineEdit_svgInf_2->sizePolicy().hasHeightForWidth());
-        lineEdit_svgInf_2->setSizePolicy(sizePolicy2);
-        lineEdit_svgInf_2->setMinimumSize(QSize(550, 90));
-        lineEdit_svgInf_2->setMaximumSize(QSize(0, 120));
+        sizePolicy2.setHeightForWidth(lineEdit_svgInf->sizePolicy().hasHeightForWidth());
+        lineEdit_svgInf->setSizePolicy(sizePolicy2);
+        lineEdit_svgInf->setMinimumSize(QSize(550, 90));
+        lineEdit_svgInf->setMaximumSize(QSize(0, 120));
 
-        verticalLayout->addWidget(lineEdit_svgInf_2);
+        verticalLayout->addWidget(lineEdit_svgInf);
 
         horizontalLayout_2 = new QHBoxLayout();
         horizontalLayout_2->setObjectName(QString::fromUtf8("horizontalLayout_2"));
@@ -226,15 +226,15 @@ public:
     {
         ObjectDetectionDockWidget->setWindowTitle(QCoreApplication::translate("ObjectDetectionDockWidget", "DockWidget", nullptr));
         label_16->setText(QCoreApplication::translate("ObjectDetectionDockWidget", "\351\201\245\346\204\237\345\233\276\345\203\217\346\240\267\346\234\254\357\274\232", nullptr));
-        lineEdit_img->setText(QString());
+        lineEdit_img1->setText(QString());
         pushButton_selectUpl->setText(QCoreApplication::translate("ObjectDetectionDockWidget", "\346\265\217\350\247\210...", nullptr));
         label_17->setText(QCoreApplication::translate("ObjectDetectionDockWidget", "\351\242\204\346\265\213\346\250\241\345\236\213\357\274\232", nullptr));
         label_11->setText(QCoreApplication::translate("ObjectDetectionDockWidget", "\351\242\204\346\265\213\347\273\223\346\236\234\345\255\230\345\202\250\344\275\215\347\275\256 :", nullptr));
         pushButton_selectSvg->setText(QCoreApplication::translate("ObjectDetectionDockWidget", "\346\265\217\350\247\210...", nullptr));
         label_18->setText(QCoreApplication::translate("ObjectDetectionDockWidget", "\351\242\204\346\265\213\347\273\223\346\236\234\345\220\215\347\247\260 :", nullptr));
-        lineEdit_svgName_2->setText(QString());
+        lineEdit_svgName->setText(QString());
         label_19->setText(QCoreApplication::translate("ObjectDetectionDockWidget", "\351\227\256\351\242\230\346\217\217\350\277\260 :", nullptr));
-        lineEdit_svgInf_2->setText(QString());
+        lineEdit_svgInf->setText(QString());
         pushButton_start->setText(QCoreApplication::translate("ObjectDetectionDockWidget", "\345\274\200\345\247\213", nullptr));
         pushButton_cancel->setText(QCoreApplication::translate("ObjectDetectionDockWidget", "\345\217\226\346\266\210", nullptr));
     } // retranslateUi

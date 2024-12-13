@@ -15,7 +15,7 @@ ChangeDetectionDockWidget::ChangeDetectionDockWidget(MainWindow* mainWindow,QWid
     ui->setupUi(this);
     setWindowTitle("Change Detection");
 
-    ui->comboBox->addItem("A2Net");
+    ui->comboBox->addItem("CTMTNet");
     ui->comboBox->setCurrentIndex(0);
 
     // 设置进度条初始值和最大值
@@ -111,6 +111,7 @@ void ChangeDetectionDockWidget::on_pushButton_selectSvg_clicked()
 
 void ChangeDetectionDockWidget::on_pushButton_start_clicked()
 {
+
     ui->progressBar->setValue(0);
 
     if (ui->lineEdit_img1->text().isEmpty() || ui->lineEdit_img2->text().isEmpty() || ui->lineEdit_svgPath->text().isEmpty() || ui->lineEdit_svgName->text().isEmpty()) {
@@ -137,24 +138,26 @@ void ChangeDetectionDockWidget::on_pushButton_start_clicked()
     std::string imgPathStr2 = ui->lineEdit_img2->text().toStdString();
     std::string modelStr = ui->comboBox->currentText().toStdString();
     std::string savePathStr = ui->lineEdit_svgPath->text().toStdString();
-    std::string svgNameStr = ui->lineEdit_svgName->text().toStdString()+".png";
+    std::string svgNameStr = ui->lineEdit_svgName->text().toStdString();
 
     // 调试输出
-    qDebug() << QString::fromStdString(imgPathStr1) << QString::fromStdString(imgPathStr2) << "gpu" << QString::fromStdString(modelStr)
+    qDebug() << QString::fromStdString(imgPathStr1) << QString::fromStdString(imgPathStr2) << "cuda:0" << QString::fromStdString(modelStr)
              << QString::fromStdString(savePathStr) << QString::fromStdString(svgNameStr);
 
     // 创建 PythonWorker 实例，直接传递 std::string 对象
-    ChangeDetectionwork *worker = new ChangeDetectionwork(imgPathStr1, imgPathStr2, "gpu", modelStr, savePathStr, svgNameStr, this);
+    worker = new ChangeDetectionwork(imgPathStr1, imgPathStr2, "cuda:0", modelStr, savePathStr, svgNameStr, this);
 
     // // 连接进度更新信号
     // connect(worker, &ChangeDetectionwork::progressUpdated, ui->progressBar, &QProgressBar::setValue);
 
     // 连接处理完成信号
-    connect(worker, &ChangeDetectionwork::processingFinished, this, [this, worker](bool success) {
+    connect(worker, &ChangeDetectionwork::processingFinished, this, [this, savePathStr, svgNameStr](bool success) {
         worker->deleteLater();
         ui->progressBar->setValue(100);
         if (success) {
             QMessageBox::information(this, "Success", u8"生成成功");
+            QString fileName = QString::fromStdString(savePathStr +"/"+ svgNameStr + ".png");
+            mainWindow->Open_raster(fileName);
         } else {
             QMessageBox::critical(this, "Error", u8"生成失败");
         }

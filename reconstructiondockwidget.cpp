@@ -51,7 +51,7 @@ void ReconstructionDockWidget::on_pushButton_selectUpl_clicked()
         return;
     }
 
-    QgsProject::instance()->addMapLayer(rasterLayer);
+    // QgsProject::instance()->addMapLayer(rasterLayer);
     // 清除当前图层
     mapCanvas1->setLayers(QList<QgsMapLayer *>());
     // 只设置在 mapCanvas1 上
@@ -99,7 +99,7 @@ void ReconstructionDockWidget::on_pushButton_start_clicked()
     std::string imgPathStr = ui->lineEdit_img->text().toStdString();
     std::string modelStr = ui->comboBox->currentText().toStdString();
     std::string savePathStr = ui->lineEdit_svgPath->text().toStdString();
-    std::string svgNameStr = ui->lineEdit_svgName->text().toStdString()+".png";
+    std::string svgNameStr = ui->lineEdit_svgName->text().toStdString();
 
     // 调试输出
     qDebug() << QString::fromStdString(imgPathStr) << "cpu" << QString::fromStdString(modelStr)
@@ -112,11 +112,13 @@ void ReconstructionDockWidget::on_pushButton_start_clicked()
     // connect(worker, &Reconstructionwork::progressUpdated, ui->progressBar, &QProgressBar::setValue);
 
     // 连接处理完成信号
-    connect(worker, &Reconstructionwork::processingFinished, this, [this, worker](bool success) {
+    connect(worker, &Reconstructionwork::processingFinished, this, [this, worker, savePathStr, svgNameStr](bool success) {
         worker->deleteLater();
         ui->progressBar->setValue(100);
         if (success) {
             QMessageBox::information(this, "Success", u8"生成成功");
+            QString fileName = QString::fromStdString(savePathStr +"/"+ svgNameStr + ".png");
+            mainWindow->Open_raster(fileName);
         } else {
             QMessageBox::critical(this, "Error", u8"生成失败");
         }

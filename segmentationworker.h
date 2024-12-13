@@ -1,7 +1,6 @@
-﻿#ifndef PYTHONWORKER_H
-#define PYTHONWORKER_H
+﻿#ifndef SEGMENTATIONWORKER_H
+#define SEGMENTATIONWORKER_H
 
-#endif // PYTHONWORKER_H
 #include "mainwindows.h"
 #include "PyThreadStateLock.h"
 
@@ -15,10 +14,10 @@
 #include "Python.h"
 #define slots Q_SLOTS
 
-class PythonWorker : public QThread {
+class SegmentationWorker : public QThread {
     Q_OBJECT
 public:
-    PythonWorker(const std::string& img_path_, const std::string& device_, const std::string& model_, const std::string& save_path_, const std::string& svg_name_, QObject *parent = nullptr)
+    SegmentationWorker(const std::string& img_path_, const std::string& device_, const std::string& model_, const std::string& save_path_, const std::string& svg_name_, QObject *parent = nullptr)
         : QThread(parent), img_path(img_path_), device(device_), model(model_), save_path(save_path_), svg_name(svg_name_) {
         // 调试输出
         qDebug() << "Initialized with:" << QString::fromStdString(img_path) << QString::fromStdString(device) << QString::fromStdString(model) << QString::fromStdString(save_path) << QString::fromStdString(svg_name);
@@ -30,6 +29,8 @@ signals:
 
 protected:
     void run() override {
+
+        qDebug() << "SegmentationWorker Current working directory:" << QDir::currentPath();
 
         class PyThreadStateLock PyThreadLock; // 获取全局锁
 
@@ -72,7 +73,7 @@ protected:
         PyObject *deviceObj = PyUnicode_FromString(device.c_str());
         PyObject *modelObj = PyUnicode_FromString(model.c_str());
         PyObject *savePathObj = PyUnicode_FromString(save_path.c_str());
-        PyObject *svgNameObj = PyUnicode_FromString(svg_name.c_str());
+        PyObject *svgNameObj = PyUnicode_FromString((svg_name+".png").c_str());
 
         PyTuple_SetItem(pArgs, 0, imgPathObj); // pArgs的引用计数归于pArgs
         PyTuple_SetItem(pArgs, 1, deviceObj);
@@ -98,7 +99,10 @@ protected:
         Py_DECREF(pFunc);
         Py_DECREF(pModule);
 
+        qDebug() << "SegmentationWorker Current working directory:" << QDir::currentPath();
+
         emit processingFinished(success);
+
     }
 
 private:
@@ -107,6 +111,8 @@ private:
     std::string model;
     std::string save_path;
     std::string svg_name;
+
 };
 
+#endif // SEGMENTATIONWORKER_H
 

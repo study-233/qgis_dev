@@ -6,6 +6,8 @@
 namespace Ui {
 class ChangeDetectionDockWidget;
 }
+
+class ChangeDetectionwork;
 class MainWindow;
 
 class ChangeDetectionDockWidget : public QDockWidget
@@ -25,10 +27,11 @@ private slots:
 
     void on_pushButton_start_clicked();
 
+
 private:
     Ui::ChangeDetectionDockWidget *ui;
     MainWindow* mainWindow;
-
+    ChangeDetectionwork *worker;
 };
 
 #endif // CHANGEDETECTIONDOCKWIDGET_H
